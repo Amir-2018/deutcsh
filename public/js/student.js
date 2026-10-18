@@ -21,12 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameHidden = document.getElementById('name-hidden');
     if (!startBtn || !nameInput || !nameStep || !testStep || !nameHidden) return;
 
+    let testStarted = false;
     const startTest = () => {
+        if (testStarted) return;
         const name = nameInput.value.trim();
         if (!name) { showPopup('Veuillez saisir votre nom.', { type: 'warning' }); return; }
+        testStarted = true;
         studentName = name;
         nameHidden.value = name;
-        nameStep.classList.add('hidden');
+        nameInput.readOnly = true;
+        startBtn.disabled = true;
+        startBtn.classList.add('start-btn-started');
+        startBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Test commencé';
+        nameStep.querySelector('p').textContent = 'Le test a commencé. Bonne chance !';
         testStep.classList.remove('hidden');
         // Notifier le professeur que l'élève a commencé
         if (socket) socket.emit('student_start', { testId: TEST_ID, name: name, total: TOTAL_QUESTIONS });
