@@ -119,7 +119,7 @@
                                 <p class="empty-hint">Aucun résultat pour le moment.</p>
                             <% } else { %>
                                 <% results.forEach((r) => { %>
-                                <div class="result-item" data-name="<%= r.name %>">
+                                <div class="result-item" data-name="<%= r.name %>" data-percentage="<%= r.percentage %>">
                                     <div class="result-left">
                                         <div class="avatar" style="background:<%= r.avatar.color %>"><%= r.avatar.initials %></div>
                                         <div>

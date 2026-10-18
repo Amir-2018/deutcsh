@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = document.createElement('div');
             item.className = 'result-item';
             item.setAttribute('data-name', data.name);
+            item.setAttribute('data-percentage', data.percentage);
             item.innerHTML = `
                 <div class="result-left">
                     <div class="avatar" style="background:${data.avatar.color}">${data.avatar.initials}</div>
@@ -170,7 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="result-bar-fill" style="width: ${data.percentage}%"></div>
                 </div>
             `;
-            list.prepend(item);
+            list.appendChild(item);
+            const sortedItems = [...list.querySelectorAll('.result-item')]
+                .sort((a, b) => Number(b.dataset.percentage) - Number(a.dataset.percentage));
+            sortedItems.forEach((result) => list.appendChild(result));
         }
 
         function updateLeaderboard(data) {
