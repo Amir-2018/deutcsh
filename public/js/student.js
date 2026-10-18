@@ -14,15 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof io !== 'undefined') socket = io();
 
     // Étape 1 → Étape 2
+    const startBtn = document.getElementById('start-btn');
     const nameInput = document.getElementById('name-input');
     const nameStep = document.getElementById('name-step');
     const testStep = document.getElementById('test-step');
     const nameHidden = document.getElementById('name-hidden');
-    if (!nameInput || !nameStep || !testStep || !nameHidden) return;
+    if (!startBtn || !nameInput || !nameStep || !testStep || !nameHidden) return;
 
-    nameInput.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter') return;
-        event.preventDefault();
+    const startTest = () => {
         const name = nameInput.value.trim();
         if (!name) { showPopup('Veuillez saisir votre nom.', { type: 'warning' }); return; }
         studentName = name;
@@ -32,6 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Notifier le professeur que l'élève a commencé
         if (socket) socket.emit('student_start', { testId: TEST_ID, name: name, total: TOTAL_QUESTIONS });
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    startBtn.addEventListener('click', startTest);
+    nameInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            startTest();
+        }
     });
 
     // Comptage des réponses en temps réel
