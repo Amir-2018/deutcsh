@@ -2,13 +2,23 @@
  * Deutschland QCM - Contrôleur Professeur
  */
 const store = require('../data/store');
+const { getAvatar } = require('../utils/avatar');
 
 // GET / - Page professeur (affichée par défaut)
 exports.getIndex = (req, res) => {
     const testId = req.query.generated || null;
+
+    // Trier les résultats par pourcentage décroissant et ajouter l'avatar
+    const sortedResults = [...store.results].sort((a, b) => b.percentage - a.percentage);
+    const resultsWithAvatar = sortedResults.map(r => ({
+        ...r,
+        avatar: getAvatar(r.name)
+    }));
+
     res.render('teacher', {
         questions: store.questions,
-        results: store.results,
+        results: resultsWithAvatar,
+        topResults: resultsWithAvatar.slice(0, 2),
         testId: testId,
         error: req.query.error || null
     });
@@ -22,7 +32,6 @@ exports.addQuestion = (req, res) => {
         return res.redirect('/?error=' + encodeURIComponent('Veuillez saisir une question.'));
     }
 
-    // Les réponses arrivent sous forme de tableau grâce au name="answers[]"
     let answerArray = Array.isArray(answers) ? answers : [answers];
     answerArray = answerArray.map(a => (a || '').trim());
     const hasEmpty = answerArray.some(a => a === '');
@@ -66,7 +75,6 @@ exports.generateTest = (req, res) => {
         return res.redirect('/?error=' + encodeURIComponent("Veuillez d'abord ajouter des questions."));
     }
     const testId = 'test_' + Date.now();
-    // Snapshot des questions actuelles
     store.tests.set(testId, {
         id: testId,
         questions: JSON.parse(JSON.stringify(store.questions)),
@@ -78,5 +86,6 @@ exports.generateTest = (req, res) => {
 // POST /clear-results - Supprimer tous les résultats
 exports.clearResults = (req, res) => {
     store.results = [];
+    store.saveResults();
     res.redirect('/');
 };

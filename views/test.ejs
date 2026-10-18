@@ -20,18 +20,27 @@
                 <a href="/" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Retour à l'espace professeur</a>
             </div>
             <% } else { %>
-            <div class="card">
+
+            <!-- Étape 1 : saisie du nom -->
+            <div class="card" id="name-step">
                 <h3><i class="fa-solid fa-hand-sparkles"></i> Bienvenue !</h3>
-                <p>Veuillez saisir votre nom puis répondre aux questions.</p>
+                <p>Veuillez saisir votre nom pour commencer le test.</p>
+                <div class="form-group">
+                    <label for="name-input">Votre nom :</label>
+                    <input type="text" id="name-input" placeholder="Prénom et nom...">
+                </div>
+                <button type="button" id="start-btn" class="btn btn-primary"><i class="fa-solid fa-play"></i> Commencer le test</button>
+            </div>
+
+            <!-- Étape 2 : questions -->
+            <div class="card hidden" id="test-step">
+                <h3>🇩🇪 Test Deutschland</h3>
+                <p class="test-info">Répondez à toutes les questions puis cliquez sur « Soumettre le test ».</p>
                 <form action="/test/<%= test.id %>/submit" method="POST" id="test-form">
-                    <div class="form-group">
-                        <label for="student-name">Votre nom :</label>
-                        <input type="text" id="student-name" name="name" placeholder="Prénom et nom..." required>
-                    </div>
-                    <p class="test-info">Répondez à toutes les questions puis cliquez sur « Soumettre le test ».</p>
+                    <input type="hidden" name="name" id="name-hidden">
                     <div id="test-questions">
                         <% test.questions.forEach((q, i) => { %>
-                        <div class="test-question">
+                        <div class="test-question" data-q="<%= i %>">
                             <div class="question-label">Question <%= i + 1 %> : <%= q.text %></div>
                             <% q.options.forEach((opt, j) => { %>
                             <label class="test-option">
@@ -49,5 +58,11 @@
         </section>
     </main>
     <%- include('partials/footer') %>
+    <script>
+        window.TEST_ID = '<%= test ? test.id : "" %>';
+        window.TOTAL_QUESTIONS = <%= test ? test.questions.length : 0 %>;
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/student.js"></script>
 </body>
 </html>

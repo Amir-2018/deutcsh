@@ -11,13 +11,41 @@
 </head>
 <body>
     <%- include('partials/header') %>
+
+    <!-- Classement (haut gauche) -->
+    <div class="leaderboard">
+        <div class="leaderboard-title"><i class="fa-solid fa-trophy"></i> Classement</div>
+        <div id="leaderboard-list">
+            <% if (topResults.length === 0) { %>
+                <p class="leaderboard-empty">Aucun élève pour le moment</p>
+            <% } else { %>
+                <% topResults.forEach((r, i) => { %>
+                <div class="leaderboard-item rank-<%= i+1 %>">
+                    <div class="rank-badge"><%= i+1 %></div>
+                    <div class="avatar" style="background:<%= r.avatar.color %>"><%= r.avatar.initials %></div>
+                    <div class="leaderboard-info">
+                        <span class="leaderboard-name"><%= r.name %></span>
+                        <span class="leaderboard-score"><%= r.percentage %>%</span>
+                    </div>
+                </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </div>
+
     <main>
         <section class="view active">
-            <h2><i class="fa-solid fa-chalkboard-user"></i> Espace Professeur</h2>
-
             <% if (error) { %>
             <div class="card error-banner"><i class="fa-solid fa-circle-exclamation"></i> <%= error %></div>
             <% } %>
+
+            <!-- Progression en temps réel -->
+            <div class="card">
+                <h3><i class="fa-solid fa-signal"></i> Élèves en cours (temps réel)</h3>
+                <div id="live-progress">
+                    <p class="empty-hint">Aucun élève ne passe le test actuellement.</p>
+                </div>
+            </div>
 
             <!-- Ajouter une question -->
             <div class="card">
@@ -47,17 +75,22 @@
                     <% } else { %>
                         <% questions.forEach((q, i) => { %>
                         <div class="question-item">
-                            <form action="/delete-question/<%= i %>" method="POST" class="delete-form">
-                                <button type="submit" class="delete-question" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                            </form>
-                            <div class="question-text">Question <%= i + 1 %> : <%= q.text %></div>
-                            <% q.options.forEach((opt, j) => { %>
-                                <% if (j === q.correct) { %>
-                                    <div class="answer-text correct-answer"><%= opt %></div>
-                                <% } else { %>
-                                    <div class="answer-text"><%= opt %></div>
-                                <% } %>
-                            <% }) %>
+                            <div class="question-header">
+                                <span class="question-num"><%= i + 1 %></span>
+                                <div class="question-text"><%= q.text %></div>
+                                <form action="/delete-question/<%= i %>" method="POST" class="delete-form">
+                                    <button type="submit" class="delete-question" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                            <div class="question-answers">
+                                <% q.options.forEach((opt, j) => { %>
+                                    <% if (j === q.correct) { %>
+                                        <div class="answer-text correct-answer"><%= opt %></div>
+                                    <% } else { %>
+                                        <div class="answer-text"><%= opt %></div>
+                                    <% } %>
+                                <% }) %>
+                            </div>
                         </div>
                         <% }) %>
                     <% } %>
@@ -67,13 +100,15 @@
             <!-- Partager & exporter -->
             <div class="card actions-card">
                 <h3><i class="fa-solid fa-share-from-square"></i> Partager & exporter le test</h3>
-                <form action="/generate-test" method="POST" class="inline-form">
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-qrcode"></i> Générer le QR Code</button>
-                </form>
-                <button id="generate-pdf-btn" class="btn btn-secondary"><i class="fa-solid fa-file-pdf"></i> PDF avec les réponses</button>
-                <form action="/clear-questions" method="POST" class="inline-form" id="clear-questions-form">
-                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Supprimer toutes les questions</button>
-                </form>
+                <div class="icon-actions">
+                    <form action="/generate-test" method="POST" class="inline-form">
+                        <button type="submit" class="btn btn-icon btn-primary" title="Générer le QR Code"><i class="fa-solid fa-qrcode"></i></button>
+                    </form>
+                    <button id="generate-pdf-btn" class="btn btn-icon btn-secondary" title="PDF avec les réponses"><i class="fa-solid fa-file-pdf"></i></button>
+                    <form action="/clear-questions" method="POST" class="inline-form" id="clear-questions-form">
+                        <button type="submit" class="btn btn-icon btn-danger" title="Supprimer toutes les questions"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </div>
             </div>
 
             <!-- QR Code -->
@@ -92,19 +127,21 @@
             </div>
             <% } %>
 
-            <!-- Résultats -->
+            <!-- Résultats des élèves -->
             <div class="card">
                 <h3><i class="fa-solid fa-chart-column"></i> Résultats des élèves</h3>
                 <div id="results-list">
                     <% if (results.length === 0) { %>
                         <p class="empty-hint">Aucun résultat pour le moment.</p>
                     <% } else { %>
-                        <% const sortedResults = [...results].sort((a, b) => b.percentage - a.percentage); %>
-                        <% sortedResults.forEach((r) => { %>
-                        <div class="result-item">
-                            <div>
-                                <span class="result-name"><%= r.name %></span>
-                                <span class="result-date"> — <%= r.date %></span>
+                        <% results.forEach((r) => { %>
+                        <div class="result-item" data-name="<%= r.name %>">
+                            <div class="result-left">
+                                <div class="avatar" style="background:<%= r.avatar.color %>"><%= r.avatar.initials %></div>
+                                <div>
+                                    <span class="result-name"><%= r.name %></span>
+                                    <span class="result-date"> — <%= r.date %></span>
+                                </div>
                             </div>
                             <div class="result-score"><%= r.score %>/<%= r.total %> (<%= r.percentage %>%)</div>
                             <div class="result-bar">
@@ -125,6 +162,7 @@
         window.QUESTIONS = <%- JSON.stringify(questions).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') %>;
         window.TEST_ID = '<%= testId %>';
     </script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/js/teacher.js"></script>
 </body>
 </html>

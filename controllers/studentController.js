@@ -2,6 +2,7 @@
  * Deutschland QCM - Contrôleur Élève
  */
 const store = require('../data/store');
+const { getAvatar } = require('../utils/avatar');
 
 // GET /test/:id - Page du test (élève) - accessible uniquement via le QR Code
 exports.getTest = (req, res) => {
@@ -24,7 +25,6 @@ exports.submitTest = (req, res) => {
         return res.redirect('/test/' + req.params.id);
     }
 
-    // Les réponses arrivent comme un objet/tableau : answers[0], answers[1], ...
     const answers = req.body.answers || {};
 
     // Calcul du score
@@ -47,8 +47,18 @@ exports.submitTest = (req, res) => {
         date: new Date().toLocaleString('fr-FR')
     };
 
-    // Sauvegarde du résultat (le professeur peut le voir dans son espace)
+    // Sauvegarde du résultat dans le store + fichier JSON
     store.results.push(result);
+    store.saveResults();
+
+    // Notification temps réel au professeur (résultat final + avatar)
+    const io = req.app.get('io');
+    if (io) {
+        io.to('teachers').emit('student_result', {
+            ...result,
+            avatar: getAvatar(name)
+        });
+    }
 
     // Message et emoji selon le pourcentage
     let emoji = '😕', message = 'Continuez à pratiquer !';

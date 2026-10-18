@@ -1,73 +1,191 @@
 /* ===================================================
    Deutschland QCM - teacher.js (côté client)
-   Gestion : ajout de réponses, QR Code, PDF
+   QR Code, PDF, Socket.io (progression + classement)
    =================================================== */
 
-// Données injectées par le serveur (EJS)
 const QUESTIONS = window.QUESTIONS || [];
 const TEST_ID = window.TEST_ID || null;
+
+// ---- Avatar (côté client, pour les mises à jour temps réel) ----
+const AVATAR_COLORS = [
+    '#B8D52F', '#3A7D2F', '#5A8C3A', '#7CA82E',
+    '#D4E86A', '#2E5A1F', '#8FB339', '#6BAE3F',
+    '#9CBE2F', '#4A7C2A', '#A3BD26', '#111C1A'
+];
+function getInitials(name) {
+    const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+function getColor(name) {
+    let hash = 0;
+    for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Champs de réponse par défaut (2)
     addAnswerInput();
     addAnswerInput();
-
-    // Bouton "+ Réponse"
     document.getElementById('add-answer-btn').onclick = addAnswerInput;
 
-    // Validation côté client du formulaire d'ajout de question
+    // Validation du formulaire d'ajout de question
     document.getElementById('question-form').addEventListener('submit', (e) => {
         const questionText = document.getElementById('question-text').value.trim();
         const answerRows = document.querySelectorAll('#answers-container .answer-row');
         const correctRadio = document.querySelector('input[name="correctIndex"]:checked');
-
-        if (!questionText) {
-            e.preventDefault();
-            alert('Veuillez saisir une question.');
-            return;
-        }
-
+        if (!questionText) { e.preventDefault(); alert('Veuillez saisir une question.'); return; }
         let hasEmpty = false;
-        answerRows.forEach(row => {
-            if (!row.querySelector('input[type="text"]').value.trim()) hasEmpty = true;
-        });
-        if (hasEmpty) {
-            e.preventDefault();
-            alert('Veuillez remplir tous les champs de réponse.');
-            return;
-        }
-
-        if (!correctRadio) {
-            e.preventDefault();
-            alert('Veuillez marquer la bonne réponse.');
-            return;
-        }
+        answerRows.forEach(r => { if (!r.querySelector('input[type="text"]').value.trim()) hasEmpty = true; });
+        if (hasEmpty) { e.preventDefault(); alert('Veuillez remplir tous les champs de réponse.'); return; }
+        if (!correctRadio) { e.preventDefault(); alert('Veuillez marquer la bonne réponse.'); return; }
     });
 
-    // Bouton PDF
     document.getElementById('generate-pdf-btn').onclick = generatePDF;
 
-    // Confirmations de suppression
     const clearQ = document.getElementById('clear-questions-form');
-    if (clearQ) {
-        clearQ.addEventListener('submit', (e) => {
-            if (!confirm('Voulez-vous vraiment supprimer toutes les questions ?')) e.preventDefault();
-        });
-    }
+    if (clearQ) clearQ.addEventListener('submit', (e) => { if (!confirm('Voulez-vous vraiment supprimer toutes les questions ?')) e.preventDefault(); });
     const clearR = document.getElementById('clear-results-form');
-    if (clearR) {
-        clearR.addEventListener('submit', (e) => {
-            if (!confirm('Voulez-vous vraiment supprimer tous les résultats ?')) e.preventDefault();
-        });
-    }
+    if (clearR) clearR.addEventListener('submit', (e) => { if (!confirm('Voulez-vous vraiment supprimer tous les résultats ?')) e.preventDefault(); });
 
-    // Générer le QR Code si un test vient d'être créé
-    if (TEST_ID) {
-        generateQR(TEST_ID);
+    if (TEST_ID) generateQR(TEST_ID);
+
+    // ---- Socket.io : écoute temps réel ----
+    if (typeof io !== 'undefined') {
+        const socket = io();
+        socket.emit('join_teacher');
+
+        const liveBox = document.getElementById('live-progress');
+        const liveStudents = {}; // name -> élément DOM
+
+        // Un élève commence un test
+        socket.on('student_start', (data) => {
+            if (liveStudents[data.name]) return;
+            createLiveStudent(data.name, 0, data.total || 0);
+        });
+
+        // Progression d'un élève (réponse à une question)
+        socket.on('student_progress', (data) => {
+            if (!liveStudents[data.name]) {
+                createLiveStudent(data.name, data.answered, data.total);
+            } else {
+                updateLiveStudent(data.name, data.answered, data.total);
+            }
+        });
+
+        // Un élève a terminé : on le retire de "en cours" et on l'ajoute aux résultats
+        socket.on('student_result', (data) => {
+            if (liveStudents[data.name]) {
+                liveStudents[data.name].remove();
+                delete liveStudents[data.name];
+                checkLiveEmpty();
+            }
+            addResultToList(data);
+            updateLeaderboard(data);
+        });
+
+        // Un élève se déconnecte
+        socket.on('student_disconnect', () => { /* géré par nom si nécessaire */ });
+
+        function createLiveStudent(name, answered, total) {
+            const empty = liveBox.querySelector('.empty-hint');
+            if (empty) empty.remove();
+            const item = document.createElement('div');
+            item.className = 'live-student';
+            const color = getColor(name);
+            const initials = getInitials(name);
+            item.innerHTML = `
+                <div class="avatar" style="background:${color}">${initials}</div>
+                <div class="live-info">
+                    <div class="live-name">${escapeHtml(name)}</div>
+                    <div class="live-bar-wrap">
+                        <div class="live-bar"></div>
+                    </div>
+                    <div class="live-count">0 / ${total}</div>
+                </div>
+            `;
+            liveBox.appendChild(item);
+            liveStudents[name] = item;
+            updateLiveStudent(name, answered, total);
+        }
+
+        function updateLiveStudent(name, answered, total) {
+            const item = liveStudents[name];
+            if (!item) return;
+            const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+            item.querySelector('.live-bar').style.width = pct + '%';
+            item.querySelector('.live-count').textContent = `${answered} / ${total}`;
+        }
+
+        function checkLiveEmpty() {
+            if (Object.keys(liveStudents).length === 0) {
+                liveBox.innerHTML = '<p class="empty-hint">Aucun élève ne passe le test actuellement.</p>';
+            }
+        }
+
+        function addResultToList(data) {
+            const list = document.getElementById('results-list');
+            const empty = list.querySelector('.empty-hint');
+            if (empty) empty.remove();
+            // éviter les doublons
+            if (list.querySelector(`.result-item[data-name="${cssEscape(data.name)}"]`)) return;
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.setAttribute('data-name', data.name);
+            item.innerHTML = `
+                <div class="result-left">
+                    <div class="avatar" style="background:${data.avatar.color}">${data.avatar.initials}</div>
+                    <div>
+                        <span class="result-name">${escapeHtml(data.name)}</span>
+                        <span class="result-date"> — ${data.date || ''}</span>
+                    </div>
+                </div>
+                <div class="result-score">${data.score}/${data.total} (${data.percentage}%)</div>
+                <div class="result-bar">
+                    <div class="result-bar-fill" style="width: ${data.percentage}%"></div>
+                </div>
+            `;
+            list.prepend(item);
+        }
+
+        function updateLeaderboard(data) {
+            // Récupère tous les résultats (DOM) et recalcule le top 2
+            const items = [...document.querySelectorAll('#results-list .result-item')];
+            const all = items.map(it => {
+                const scoreText = it.querySelector('.result-score').textContent;
+                const m = scoreText.match(/(\d+)\/(\d+)\s*\((\d+)%\)/);
+                return { name: it.getAttribute('data-name'), percentage: m ? parseInt(m[3]) : 0 };
+            });
+            all.sort((a, b) => b.percentage - a.percentage);
+            renderLeaderboard(all.slice(0, 2));
+        }
+
+        function renderLeaderboard(top) {
+            const lb = document.getElementById('leaderboard-list');
+            if (top.length === 0) {
+                lb.innerHTML = '<p class="leaderboard-empty">Aucun élève pour le moment</p>';
+                return;
+            }
+            lb.innerHTML = top.map((r, i) => `
+                <div class="leaderboard-item rank-${i + 1}">
+                    <div class="rank-badge">${i + 1}</div>
+                    <div class="avatar" style="background:${getColor(r.name)}">${getInitials(r.name)}</div>
+                    <div class="leaderboard-info">
+                        <span class="leaderboard-name">${escapeHtml(r.name)}</span>
+                        <span class="leaderboard-score">${r.percentage}%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
     }
 });
 
-// ===== Ajouter un champ de réponse =====
+// ---- Helpers ----
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function cssEscape(t) { return (t || '').replace(/"/g, '\\"'); }
+
+// ---- Ajouter / supprimer un champ de réponse ----
 function addAnswerInput() {
     const container = document.getElementById('answers-container');
     const index = container.children.length;
@@ -80,158 +198,73 @@ function addAnswerInput() {
     `;
     container.appendChild(row);
 }
-
 function removeAnswerInput(btn) {
     const container = document.getElementById('answers-container');
-    if (container.children.length <= 2) {
-        alert('Au moins deux réponses sont requises.');
-        return;
-    }
+    if (container.children.length <= 2) { alert('Au moins deux réponses sont requises.'); return; }
     btn.parentElement.remove();
-    // Renuméroter les radios
     const rows = container.querySelectorAll('.answer-row');
-    rows.forEach((row, i) => {
-        row.querySelector('input[type="radio"]').value = i;
-    });
+    rows.forEach((row, i) => { row.querySelector('input[type="radio"]').value = i; });
 }
 
-// ===== Générer le QR Code =====
+// ---- QR Code ----
 function generateQR(testId) {
     const testUrl = window.location.origin + '/test/' + testId;
     const qrContainer = document.getElementById('qrcode');
     qrContainer.innerHTML = '';
     new QRCode(qrContainer, {
-        text: testUrl,
-        width: 256,
-        height: 256,
-        colorDark: '#111C1A',
-        colorLight: '#FFFFFF',
+        text: testUrl, width: 256, height: 256,
+        colorDark: '#111C1A', colorLight: '#FFFFFF',
         correctLevel: QRCode.CorrectLevel.M
     });
     document.getElementById('test-link').value = testUrl;
 }
-
 function copyLink() {
     const link = document.getElementById('test-link');
-    link.select();
-    link.setSelectionRange(0, 99999);
-    document.execCommand('copy');
-    alert('Lien copié !');
+    link.select(); link.setSelectionRange(0, 99999);
+    document.execCommand('copy'); alert('Lien copié !');
 }
 
-// ===== Générer le PDF avec les réponses =====
+// ---- PDF ----
 function generatePDF() {
-    if (QUESTIONS.length === 0) {
-        alert("Veuillez d'abord ajouter des questions.");
-        return;
-    }
-
+    if (QUESTIONS.length === 0) { alert("Veuillez d'abord ajouter des questions."); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const pageWidth = 210;
-    const pageHeight = 297;
+    const pageWidth = 210, pageHeight = 297;
     let y = 0;
-
-    // Palette : lime #B8D52F (184,213,47) / dark #111C1A (17,28,26)
-    // Bande lime en haut
-    doc.setFillColor(184, 213, 47);
-    doc.rect(0, 0, pageWidth, 8, 'F');
-    // Bande foncée
-    doc.setFillColor(17, 28, 26);
-    doc.rect(0, 8, pageWidth, 22, 'F');
-
+    doc.setFillColor(184, 213, 47); doc.rect(0, 0, pageWidth, 8, 'F');
+    doc.setFillColor(17, 28, 26); doc.rect(0, 8, pageWidth, 22, 'F');
     y = 48;
-
-    // Titre
-    doc.setFontSize(22);
-    doc.setTextColor(17, 28, 26);
-    doc.setFont(undefined, 'bold');
-    doc.text('Deutschland QCM', pageWidth / 2, y, { align: 'center' });
-    y += 10;
-
-    doc.setFontSize(14);
-    doc.setTextColor(58, 125, 47);
-    doc.text('Test avec les bonnes réponses', pageWidth / 2, y, { align: 'center' });
-    y += 8;
-
-    doc.setFontSize(10);
-    doc.setTextColor(120, 120, 120);
-    doc.setFont(undefined, 'normal');
+    doc.setFontSize(22); doc.setTextColor(17, 28, 26); doc.setFont(undefined, 'bold');
+    doc.text('Deutschland QCM', pageWidth / 2, y, { align: 'center' }); y += 10;
+    doc.setFontSize(14); doc.setTextColor(58, 125, 47);
+    doc.text('Test avec les bonnes réponses', pageWidth / 2, y, { align: 'center' }); y += 8;
+    doc.setFontSize(10); doc.setTextColor(120, 120, 120); doc.setFont(undefined, 'normal');
     const dateStr = new Date().toLocaleDateString('fr-FR');
-    doc.text('Créé le : ' + dateStr, pageWidth / 2, y, { align: 'center' });
-    y += 8;
-
-    doc.setDrawColor(184, 213, 47);
-    doc.setLineWidth(0.5);
-    doc.line(20, y, pageWidth - 20, y);
-    y += 10;
-
-    // Questions
+    doc.text('Créé le : ' + dateStr, pageWidth / 2, y, { align: 'center' }); y += 8;
+    doc.setDrawColor(184, 213, 47); doc.setLineWidth(0.5); doc.line(20, y, pageWidth - 20, y); y += 10;
     const letters = ['a', 'b', 'c', 'd', 'e', 'f'];
     QUESTIONS.forEach((q, i) => {
-        if (y > pageHeight - 40) {
-            doc.addPage();
-            y = 20;
-        }
-
-        doc.setFontSize(12);
-        doc.setTextColor(17, 28, 26);
-        doc.setFont(undefined, 'bold');
-        const qText = `Question ${i + 1} : ${q.text}`;
-        const qLines = doc.splitTextToSize(qText, pageWidth - 40);
-        doc.text(qLines, 20, y);
-        y += qLines.length * 6 + 2;
-
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(11);
-
+        if (y > pageHeight - 40) { doc.addPage(); y = 20; }
+        doc.setFontSize(12); doc.setTextColor(17, 28, 26); doc.setFont(undefined, 'bold');
+        const qLines = doc.splitTextToSize(`Question ${i + 1} : ${q.text}`, pageWidth - 40);
+        doc.text(qLines, 20, y); y += qLines.length * 6 + 2;
+        doc.setFont(undefined, 'normal'); doc.setFontSize(11);
         q.options.forEach((opt, j) => {
-            if (y > pageHeight - 25) {
-                doc.addPage();
-                y = 20;
-            }
-
+            if (y > pageHeight - 25) { doc.addPage(); y = 20; }
             const isCorrect = (j === q.correct);
-            const prefix = isCorrect ? '[X]' : '[ ]';
-            const optText = `${prefix}  ${letters[j]}) ${opt}`;
-
-            if (isCorrect) {
-                doc.setTextColor(58, 125, 47);
-                doc.setFont(undefined, 'bold');
-            } else {
-                doc.setTextColor(80, 80, 80);
-                doc.setFont(undefined, 'normal');
-            }
-
+            const optText = `${isCorrect ? '[X]' : '[ ]'}  ${letters[j]}) ${opt}`;
+            if (isCorrect) { doc.setTextColor(58, 125, 47); doc.setFont(undefined, 'bold'); }
+            else { doc.setTextColor(80, 80, 80); doc.setFont(undefined, 'normal'); }
             const optLines = doc.splitTextToSize(optText, pageWidth - 45);
-            doc.text(optLines, 25, y);
-            y += optLines.length * 6;
-
-            if (isCorrect) {
-                doc.setTextColor(58, 125, 47);
-                doc.setFontSize(9);
-                doc.text('>> Bonne réponse', pageWidth - 20, y - 1, { align: 'right' });
-                doc.setFontSize(11);
-            }
+            doc.text(optLines, 25, y); y += optLines.length * 6;
+            if (isCorrect) { doc.setTextColor(58, 125, 47); doc.setFontSize(9); doc.text('>> Bonne réponse', pageWidth - 20, y - 1, { align: 'right' }); doc.setFontSize(11); }
         });
-
-        y += 6;
-        doc.setDrawColor(212, 232, 106);
-        doc.setLineWidth(0.3);
-        doc.line(20, y, pageWidth - 20, y);
-        y += 8;
+        y += 6; doc.setDrawColor(212, 232, 106); doc.setLineWidth(0.3); doc.line(20, y, pageWidth - 20, y); y += 8;
     });
-
-    // Pied de page
     const pageCount = doc.internal.getNumberOfPages();
     for (let p = 1; p <= pageCount; p++) {
-        doc.setPage(p);
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.setFont(undefined, 'normal');
+        doc.setPage(p); doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.setFont(undefined, 'normal');
         doc.text(`Deutschland QCM - Page ${p} sur ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
     }
-
-    const filename = `Deutschland_QCM_${dateStr.replace(/\//g, '-')}.pdf`;
-    doc.save(filename);
+    doc.save(`Deutschland_QCM_${dateStr.replace(/\//g, '-')}.pdf`);
 }
