@@ -32,6 +32,20 @@ body {
     min-height: 100vh;
 }
 
+.login-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-page main {
+    flex: 1;
+    width: 100%;
+}
+
+.login-page footer {
+    margin-top: auto;
+}
+
 /* ===== En-tête ===== */
 .app-header {
     background: var(--dark);
@@ -449,6 +463,66 @@ main {
     background: var(--dark-hover);
 }
 
+.popup-overlay[hidden] {
+    display: none;
+}
+
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(17, 28, 26, 0.7);
+}
+
+.popup-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px;
+    border-top: 4px solid var(--lime);
+    border-radius: 12px;
+    background: var(--white);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    text-align: center;
+    animation: modalPop 0.25s ease;
+}
+
+.popup-icon {
+    margin-bottom: 12px;
+    font-size: 2.2rem;
+}
+
+.popup-icon-info {
+    color: var(--correct);
+}
+
+.popup-icon-success {
+    color: var(--correct);
+}
+
+.popup-icon-warning {
+    color: var(--danger);
+}
+
+.popup-box h3 {
+    margin-bottom: 12px;
+    color: var(--dark);
+}
+
+.popup-box p {
+    margin-bottom: 20px;
+    color: var(--muted);
+}
+
+.popup-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
 .link-section {
     margin-top: 15px;
 }
@@ -636,6 +710,10 @@ main {
     gap: 12px;
 }
 
+.student-page .navbar-actions a[href="/login"] {
+    display: none;
+}
+
 .navbar-user {
     color: var(--white);
     font-size: 0.9rem;
@@ -661,6 +739,22 @@ main {
 
 .login-card form {
     margin-top: 15px;
+}
+
+.login-card input[type="text"],
+.login-card input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.login-card input[type="text"]:focus,
+.login-card input[type="password"]:focus {
+    border-color: var(--lime);
+    outline: none;
 }
 
 .error-banner-inline {
@@ -851,6 +945,27 @@ main {
     flex: 1;
 }
 
+/* ===== Layout Dashboard Professeur (2 colonnes) ===== */
+.teacher-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.teacher-col-left,
+.teacher-col-right {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 960px) {
+    .teacher-grid {
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 24px;
+    }
+}
+
 /* Masquer le classement flottant sur petits écrans */
 @media (max-width: 1180px) {
     .leaderboard {
@@ -858,6 +973,23 @@ main {
         width: 100%;
         max-width: 900px;
         margin: 0 auto 20px;
+    }
+}
+
+@media (min-width: 1181px) {
+    .teacher-main {
+        max-width: 1250px;
+        margin-left: 250px;
+        margin-right: auto;
+        padding: 0 25px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .teacher-main {
+        max-width: 1380px;
+        margin-left: 260px;
+        margin-right: auto;
     }
 }
 

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startBtn.addEventListener('click', () => {
         const name = nameInput.value.trim();
-        if (!name) { alert('Veuillez saisir votre nom.'); return; }
+        if (!name) { showPopup('Veuillez saisir votre nom.', { type: 'warning' }); return; }
         studentName = name;
         nameHidden.value = name;
         nameStep.classList.add('hidden');

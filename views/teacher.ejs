@@ -33,111 +33,113 @@
         </div>
     </div>
 
-    <main>
+    <main class="teacher-main">
         <section class="view active">
             <% if (error) { %>
             <div class="card error-banner"><i class="fa-solid fa-circle-exclamation"></i> <%= error %></div>
             <% } %>
 
-            <!-- Progression en temps réel -->
-            <div class="card">
-                <h3><i class="fa-solid fa-signal"></i> Élèves en cours (temps réel)</h3>
-                <div id="live-progress">
-                    <p class="empty-hint">Aucun élève ne passe le test actuellement.</p>
-                </div>
-            </div>
-
-            <!-- Ajouter une question -->
-            <div class="card">
-                <h3><i class="fa-solid fa-pen-to-square"></i> Ajouter une nouvelle question</h3>
-                <form action="/add-question" method="POST" id="question-form">
-                    <div class="form-group">
-                        <label for="question-text">Question :</label>
-                        <input type="text" id="question-text" name="questionText" placeholder="ex. Quelle est la capitale de l'Allemagne ?">
-                    </div>
-                    <div class="form-group">
-                        <label>Réponses (marquer la bonne réponse) :</label>
-                        <div id="answers-container"></div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" id="add-answer-btn" class="btn btn-secondary"><i class="fa-solid fa-plus"></i> Réponse</button>
-                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-circle-plus"></i> Ajouter la question</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Liste des questions -->
-            <div class="card">
-                <h3><i class="fa-solid fa-list-check"></i> Liste des questions (<%= questions.length %> questions)</h3>
-                <div id="questions-list">
-                    <% if (questions.length === 0) { %>
-                        <p class="empty-hint">Aucune question ajoutée pour le moment.</p>
-                    <% } else { %>
-                        <% questions.forEach((q, i) => { %>
-                        <div class="question-item">
-                            <div class="question-header">
-                                <span class="question-num"><%= i + 1 %></span>
-                                <div class="question-text"><%= q.text %></div>
-                                <form action="/delete-question/<%= i %>" method="POST" class="delete-form">
-                                    <button type="submit" class="delete-question" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                                </form>
+            <div class="teacher-grid">
+                <!-- Colonne gauche : Gestion et partage du test -->
+                <div class="teacher-col-left">
+                    <!-- Ajouter une question -->
+                    <div class="card">
+                        <h3><i class="fa-solid fa-pen-to-square"></i> Ajouter une nouvelle question</h3>
+                        <form action="/add-question" method="POST" id="question-form">
+                            <div class="form-group">
+                                <label for="question-text">Question :</label>
+                                <input type="text" id="question-text" name="questionText" placeholder="ex. Quelle est la capitale de l'Allemagne ?">
                             </div>
-                            <div class="question-answers">
-                                <% q.options.forEach((opt, j) => { %>
-                                    <% if (j === q.correct) { %>
-                                        <div class="answer-text correct-answer"><%= opt %></div>
-                                    <% } else { %>
-                                        <div class="answer-text"><%= opt %></div>
-                                    <% } %>
-                                <% }) %>
+                            <div class="form-group">
+                                <label>Réponses (marquer la bonne réponse) :</label>
+                                <div id="answers-container"></div>
                             </div>
-                        </div>
-                        <% }) %>
-                    <% } %>
-                </div>
-            </div>
+                            <div class="form-actions">
+                                <button type="button" id="add-answer-btn" class="btn btn-secondary"><i class="fa-solid fa-plus"></i> Réponse</button>
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-circle-plus"></i> Ajouter la question</button>
+                            </div>
+                        </form>
+                    </div>
 
-            <!-- Partager & exporter -->
-            <div class="card actions-card">
-                <h3><i class="fa-solid fa-share-from-square"></i> Partager & exporter le test</h3>
-                <div class="icon-actions">
-                    <form action="/generate-test" method="POST" class="inline-form">
-                        <button type="submit" class="btn btn-icon btn-primary" title="Générer le QR Code"><i class="fa-solid fa-qrcode"></i></button>
-                    </form>
-                    <button id="generate-pdf-btn" class="btn btn-icon btn-secondary" title="PDF avec les réponses"><i class="fa-solid fa-file-pdf"></i></button>
-                    <form action="/clear-questions" method="POST" class="inline-form" id="clear-questions-form">
-                        <button type="submit" class="btn btn-icon btn-danger" title="Supprimer toutes les questions"><i class="fa-solid fa-trash"></i></button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Résultats des élèves -->
-            <div class="card">
-                <h3><i class="fa-solid fa-chart-column"></i> Résultats des élèves</h3>
-                <div id="results-list">
-                    <% if (results.length === 0) { %>
-                        <p class="empty-hint">Aucun résultat pour le moment.</p>
-                    <% } else { %>
-                        <% results.forEach((r) => { %>
-                        <div class="result-item" data-name="<%= r.name %>">
-                            <div class="result-left">
-                                <div class="avatar" style="background:<%= r.avatar.color %>"><%= r.avatar.initials %></div>
-                                <div>
-                                    <span class="result-name"><%= r.name %></span>
-                                    <span class="result-date"> — <%= r.date %></span>
+                    <!-- Liste des questions -->
+                    <div class="card">
+                        <h3><i class="fa-solid fa-list-check"></i> Liste des questions (<%= questions.length %> questions)</h3>
+                        <div id="questions-list">
+                            <% if (questions.length === 0) { %>
+                                <p class="empty-hint">Aucune question ajoutée pour le moment.</p>
+                            <% } else { %>
+                                <% questions.forEach((q, i) => { %>
+                                <div class="question-item">
+                                    <div class="question-header">
+                                        <span class="question-num"><%= i + 1 %></span>
+                                        <div class="question-text"><%= q.text %></div>
+                                        <form action="/delete-question/<%= i %>" method="POST" class="delete-form">
+                                            <button type="submit" class="delete-question" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                    <div class="question-answers">
+                                        <% q.options.forEach((opt, j) => { %>
+                                            <% if (j === q.correct) { %>
+                                                <div class="answer-text correct-answer"><%= opt %></div>
+                                            <% } else { %>
+                                                <div class="answer-text"><%= opt %></div>
+                                            <% } %>
+                                        <% }) %>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="result-score"><%= r.score %>/<%= r.total %> (<%= r.percentage %>%)</div>
-                            <div class="result-bar">
-                                <div class="result-bar-fill" style="width: <%= r.percentage %>%"></div>
-                            </div>
+                                <% }) %>
+                            <% } %>
                         </div>
-                        <% }) %>
-                    <% } %>
+                    </div>
+
+                    <!-- Partager & exporter -->
+                    <div class="card actions-card">
+                        <h3><i class="fa-solid fa-share-from-square"></i> Partager & exporter le test</h3>
+                        <div class="icon-actions">
+                            <form action="/generate-test" method="POST" class="inline-form">
+                                <button type="submit" class="btn btn-icon btn-primary" title="Générer le QR Code"><i class="fa-solid fa-qrcode"></i></button>
+                            </form>
+                            <button id="generate-pdf-btn" class="btn btn-icon btn-secondary" title="PDF avec les réponses"><i class="fa-solid fa-file-pdf"></i></button>
+                            <form action="/clear-questions" method="POST" class="inline-form" id="clear-questions-form">
+                                <button type="submit" class="btn btn-icon btn-danger" title="Supprimer toutes les questions"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <form action="/clear-results" method="POST" id="clear-results-form">
-                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Supprimer les résultats</button>
-                </form>
+
+                <!-- Colonne droite : Progression en direct et Résultats des élèves -->
+                <div class="teacher-col-right">
+             
+
+                    <!-- Résultats des élèves -->
+                    <div class="card">
+                        <h3><i class="fa-solid fa-chart-column"></i> Résultats des élèves</h3>
+                        <div id="results-list">
+                            <% if (results.length === 0) { %>
+                                <p class="empty-hint">Aucun résultat pour le moment.</p>
+                            <% } else { %>
+                                <% results.forEach((r) => { %>
+                                <div class="result-item" data-name="<%= r.name %>">
+                                    <div class="result-left">
+                                        <div class="avatar" style="background:<%= r.avatar.color %>"><%= r.avatar.initials %></div>
+                                        <div>
+                                            <span class="result-name"><%= r.name %></span>
+                                            <span class="result-date"> — <%= r.date %></span>
+                                        </div>
+                                    </div>
+                                    <div class="result-score"><%= r.score %>/<%= r.total %> (<%= r.percentage %>%)</div>
+                                    <div class="result-bar">
+                                        <div class="result-bar-fill" style="width: <%= r.percentage %>%"></div>
+                                    </div>
+                                </div>
+                                <% }) %>
+                            <% } %>
+                        </div>
+                        <form action="/clear-results" method="POST" id="clear-results-form">
+                            <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Supprimer les résultats</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </section>
     </main>

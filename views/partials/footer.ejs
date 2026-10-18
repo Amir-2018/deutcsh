@@ -1,3 +1,17 @@
 <footer>
     <p>🇩🇪 Deutschland QCM | Système de test pour professeurs et élèves</p>
 </footer>
+
+<div id="app-popup" class="popup-overlay" hidden>
+    <div class="popup-box" role="dialog" aria-modal="true" aria-labelledby="popup-title" aria-describedby="popup-message">
+        <div id="popup-icon" class="popup-icon" aria-hidden="true"></div>
+        <h3 id="popup-title"></h3>
+        <p id="popup-message"></p>
+        <div class="popup-actions">
+            <button id="popup-cancel" class="btn btn-secondary" type="button" hidden>Annuler</button>
+            <button id="popup-confirm" class="btn btn-primary" type="button">OK</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/popup.js"></script>

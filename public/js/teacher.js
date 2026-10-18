@@ -35,19 +35,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const questionText = document.getElementById('question-text').value.trim();
         const answerRows = document.querySelectorAll('#answers-container .answer-row');
         const correctRadio = document.querySelector('input[name="correctIndex"]:checked');
-        if (!questionText) { e.preventDefault(); alert('Veuillez saisir une question.'); return; }
+        if (!questionText) { e.preventDefault(); showPopup('Veuillez saisir une question.', { type: 'warning' }); return; }
         let hasEmpty = false;
         answerRows.forEach(r => { if (!r.querySelector('input[type="text"]').value.trim()) hasEmpty = true; });
-        if (hasEmpty) { e.preventDefault(); alert('Veuillez remplir tous les champs de réponse.'); return; }
-        if (!correctRadio) { e.preventDefault(); alert('Veuillez marquer la bonne réponse.'); return; }
+        if (hasEmpty) { e.preventDefault(); showPopup('Veuillez remplir tous les champs de réponse.', { type: 'warning' }); return; }
+        if (!correctRadio) { e.preventDefault(); showPopup('Veuillez marquer la bonne réponse.', { type: 'warning' }); return; }
     });
 
     document.getElementById('generate-pdf-btn').onclick = generatePDF;
 
     const clearQ = document.getElementById('clear-questions-form');
-    if (clearQ) clearQ.addEventListener('submit', (e) => { if (!confirm('Voulez-vous vraiment supprimer toutes les questions ?')) e.preventDefault(); });
+    if (clearQ) clearQ.addEventListener('submit', (e) => {
+        e.preventDefault();
+        showConfirmPopup('Voulez-vous vraiment supprimer toutes les questions ?').then((confirmed) => {
+            if (confirmed) clearQ.submit();
+        });
+    });
     const clearR = document.getElementById('clear-results-form');
-    if (clearR) clearR.addEventListener('submit', (e) => { if (!confirm('Voulez-vous vraiment supprimer tous les résultats ?')) e.preventDefault(); });
+    if (clearR) clearR.addEventListener('submit', (e) => {
+        e.preventDefault();
+        showConfirmPopup('Voulez-vous vraiment supprimer tous les résultats ?').then((confirmed) => {
+            if (confirmed) clearR.submit();
+        });
+    });
 
     if (TEST_ID) {
         generateQR(TEST_ID);
@@ -214,7 +224,7 @@ function addAnswerInput() {
 }
 function removeAnswerInput(btn) {
     const container = document.getElementById('answers-container');
-    if (container.children.length <= 2) { alert('Au moins deux réponses sont requises.'); return; }
+    if (container.children.length <= 2) { showPopup('Au moins deux réponses sont requises.', { type: 'warning' }); return; }
     btn.parentElement.remove();
     const rows = container.querySelectorAll('.answer-row');
     rows.forEach((row, i) => { row.querySelector('input[type="radio"]').value = i; });
@@ -244,12 +254,12 @@ function generateQR(testId) {
 function copyLink() {
     const link = document.getElementById('test-link');
     link.select(); link.setSelectionRange(0, 99999);
-    document.execCommand('copy'); alert('Lien copié !');
+    document.execCommand('copy'); showPopup('Lien copié !', { type: 'success' });
 }
 
 // ---- PDF ----
 function generatePDF() {
-    if (QUESTIONS.length === 0) { alert("Veuillez d'abord ajouter des questions."); return; }
+    if (QUESTIONS.length === 0) { showPopup("Veuillez d'abord ajouter des questions.", { type: 'warning' }); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const pageWidth = 210, pageHeight = 297;
