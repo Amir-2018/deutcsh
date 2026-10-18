@@ -290,7 +290,7 @@ function generatePDF() {
             else { doc.setTextColor(80, 80, 80); doc.setFont(undefined, 'normal'); }
             const optLines = doc.splitTextToSize(optText, pageWidth - 45);
             doc.text(optLines, 25, y); y += optLines.length * 6;
-            if (isCorrect) { doc.setTextColor(58, 125, 47); doc.setFontSize(9); doc.text('>> Bonne réponse', pageWidth - 20, y - 1, { align: 'right' }); doc.setFontSize(11); }
+            if (isCorrect) { doc.setTextColor(58, 125, 47); doc.setFontSize(9); doc.text('', pageWidth - 20, y - 1, { align: 'right' }); doc.setFontSize(11); }
         });
         y += 6; doc.setDrawColor(212, 232, 106); doc.setLineWidth(0.3); doc.line(20, y, pageWidth - 20, y); y += 8;
     });
