@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deutschland QCM - Résultat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <section class="view active">
+            <h2><i class="fa-solid fa-user-graduate"></i> Espace Élève</h2>
+            <div class="card">
+                <h3><i class="fa-solid fa-trophy"></i> Votre résultat</h3>
+                <div id="score-display">
+                    <div class="score-emoji"><%= emoji %></div>
+                    <div class="score-text"><%= message %></div>
+                    <div class="score-value"><%= result.score %> / <%= result.total %></div>
+                    <div class="score-text"><%= result.percentage %>% de bonnes réponses</div>
+                </div>
+                <div class="score-actions">
+                    <a href="/test/<%= result.testId %>" class="btn btn-secondary"><i class="fa-solid fa-arrow-rotate-left"></i> Recommencer</a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>

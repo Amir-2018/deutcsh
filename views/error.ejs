@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deutschland QCM - Erreur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <section class="view active">
+            <div class="card error-page">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Erreur 404</h3>
+                <p><%= message %></p>
+                <a href="/" class="btn btn-secondary"><i class="fa-solid fa-house"></i> Accueil</a>
+            </div>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deutschland QCM - Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main>
+        <section class="view active">
+            <h2><i class="fa-solid fa-user-graduate"></i> Espace Élève</h2>
+
+            <% if (!test) { %>
+            <div class="card">
+                <h3><i class="fa-solid fa-triangle-exclamation"></i> Aucun test trouvé</h3>
+                <p><%= error || 'Veuillez scanner le QR Code partagé par votre professeur.' %></p>
+                <a href="/" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Retour à l'espace professeur</a>
+            </div>
+            <% } else { %>
+            <div class="card">
+                <h3><i class="fa-solid fa-hand-sparkles"></i> Bienvenue !</h3>
+                <p>Veuillez saisir votre nom puis répondre aux questions.</p>
+                <form action="/test/<%= test.id %>/submit" method="POST" id="test-form">
+                    <div class="form-group">
+                        <label for="student-name">Votre nom :</label>
+                        <input type="text" id="student-name" name="name" placeholder="Prénom et nom..." required>
+                    </div>
+                    <p class="test-info">Répondez à toutes les questions puis cliquez sur « Soumettre le test ».</p>
+                    <div id="test-questions">
+                        <% test.questions.forEach((q, i) => { %>
+                        <div class="test-question">
+                            <div class="question-label">Question <%= i + 1 %> : <%= q.text %></div>
+                            <% q.options.forEach((opt, j) => { %>
+                            <label class="test-option">
+                                <input type="radio" name="answers[<%= i %>]" value="<%= j %>">
+                                <span class="option-text"><%= opt %></span>
+                            </label>
+                            <% }) %>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-circle-check"></i> Soumettre le test</button>
+                </form>
+            </div>
+            <% } %>
+        </section>
+    </main>
+    <%- include('partials/footer') %>
+</body>
+</html>

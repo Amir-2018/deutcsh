@@ -1,0 +1,14 @@
+<header class="app-header">
+    <div class="header-accent"></div>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand"><i class="fa-solid fa-house"></i> Accueil</a>
+        <div class="navbar-actions">
+            <% if (user) { %>
+                <span class="navbar-user"><i class="fa-solid fa-user-shield"></i> <%= user %></span>
+                <a href="/logout" class="btn btn-secondary btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</a>
+            <% } else { %>
+                <a href="/login" class="btn btn-primary btn-sm"><i class="fa-solid fa-right-to-bracket"></i> Connexion</a>
+            <% } %>
+        </div>
+    </nav>
+</header>
