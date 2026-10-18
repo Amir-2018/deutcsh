@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="student-page">
-    <%- include('partials/header') %>
+    <%- include('partials/header', { hideLogin: true }) %>
     <main>
         <section class="view active">
             <h2><i class="fa-solid fa-user-graduate"></i> Espace Élève</h2>
@@ -24,14 +24,11 @@
             <!-- Étape 1 : saisie du nom -->
             <div class="card" id="name-step">
                 <h3><i class="fa-solid fa-hand-sparkles"></i> Bienvenue !</h3>
-                <p>Veuillez saisir votre nom pour commencer le test.</p>
+                <p>Veuillez saisir votre nom puis appuyer sur Entrée pour commencer le test.</p>
                 <div class="form-group">
                     <label for="name-input">Votre nom :</label>
-                    <input type="text" id="name-input" placeholder="Prénom et nom...">
+                    <input type="text" id="name-input" placeholder="Prénom et nom..." aria-keyshortcuts="Enter">
                 </div>
-                <button type="button" id="start-btn" class="btn btn-primary">
-                    <i class="fa-solid fa-play"></i> Commencer le test
-                </button>
             </div>
 
             <!-- Étape 2 : questions -->

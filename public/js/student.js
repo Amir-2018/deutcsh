@@ -14,14 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof io !== 'undefined') socket = io();
 
     // Étape 1 → Étape 2
-    const startBtn = document.getElementById('start-btn');
     const nameInput = document.getElementById('name-input');
     const nameStep = document.getElementById('name-step');
     const testStep = document.getElementById('test-step');
     const nameHidden = document.getElementById('name-hidden');
-    if (!startBtn || !nameInput || !nameStep || !testStep || !nameHidden) return;
+    if (!nameInput || !nameStep || !testStep || !nameHidden) return;
 
-    startBtn.addEventListener('click', () => {
+    nameInput.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
         const name = nameInput.value.trim();
         if (!name) { showPopup('Veuillez saisir votre nom.', { type: 'warning' }); return; }
         studentName = name;

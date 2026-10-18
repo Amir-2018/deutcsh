@@ -710,10 +710,6 @@ main {
     gap: 12px;
 }
 
-.student-page .navbar-actions a[href="/login"] {
-    display: none;
-}
-
 .navbar-user {
     color: var(--white);
     font-size: 0.9rem;

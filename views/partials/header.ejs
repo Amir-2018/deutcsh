@@ -6,7 +6,7 @@
             <% if (user) { %>
                 <span class="navbar-user"><i class="fa-solid fa-user-shield"></i> <%= user %></span>
                 <a href="/logout" class="btn btn-secondary btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</a>
-            <% } else { %>
+            <% } else if (!hideLogin) { %>
                 <a href="/login" class="btn btn-primary btn-sm"><i class="fa-solid fa-right-to-bracket"></i> Connexion</a>
             <% } %>
         </div>
