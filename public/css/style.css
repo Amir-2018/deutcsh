@@ -198,6 +198,10 @@ main {
     text-decoration: none;
 }
 
+#submit-test-btn[hidden] {
+    display: none;
+}
+
 .btn-primary {
     background: var(--lime);
     color: var(--dark);

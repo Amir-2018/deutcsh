@@ -51,27 +51,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Comptage des réponses en temps réel
     const form = document.getElementById('test-form');
     if (!form) return;
-    form.addEventListener('change', (e) => {
-        if (socket && e.target.matches('input[type="radio"]')) {
-            const answered = form.querySelectorAll('input[type="radio"]:checked').length;
-            socket.emit('student_progress', {
-                testId: TEST_ID,
-                name: studentName,
-                answered: answered,
-                total: TOTAL_QUESTIONS
-            });
-        }
-    });
+    const submitBtn = document.getElementById('submit-test-btn');
+    if (!submitBtn) return;
 
-    // À la soumission : notifier la fin puis laisser le formulaire POSTer
-    form.addEventListener('submit', () => {
-        if (!socket) return;
+    const updateSubmitButton = () => {
         const answered = form.querySelectorAll('input[type="radio"]:checked').length;
-        socket.emit('student_finish', {
+        submitBtn.hidden = TOTAL_QUESTIONS === 0 || answered < TOTAL_QUESTIONS;
+        return answered;
+    };
+
+    form.addEventListener('change', (e) => {
+        if (!e.target.matches('input[type="radio"]')) return;
+        const answered = updateSubmitButton();
+        if (socket) socket.emit('student_progress', {
             testId: TEST_ID,
             name: studentName,
             answered: answered,
             total: TOTAL_QUESTIONS
         });
     });
+
+    // À la soumission : notifier la fin puis laisser le formulaire POSTer
+    form.addEventListener('submit', (event) => {
+        const answered = updateSubmitButton();
+        if (answered < TOTAL_QUESTIONS || TOTAL_QUESTIONS === 0) {
+            event.preventDefault();
+            showPopup('Veuillez répondre à toutes les questions avant de soumettre le test.', { type: 'warning' });
+            return;
+        }
+        if (socket) socket.emit('student_finish', {
+            testId: TEST_ID,
+            name: studentName,
+            answered: answered,
+            total: TOTAL_QUESTIONS
+        });
+    });
+
+    updateSubmitButton();
 });
