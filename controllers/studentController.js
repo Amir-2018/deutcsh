@@ -27,12 +27,27 @@ exports.submitTest = (req, res) => {
 
     const answers = req.body.answers || {};
 
-    // Calcul du score
+    const studentAnswers = [];
+
+    // Calcul du score et conservation des réponses pour la consultation professeur
     let score = 0;
     test.questions.forEach((q, i) => {
-        if (answers[i] !== undefined && parseInt(answers[i]) === q.correct) {
+        const selectedIndex = Number.parseInt(answers[i], 10);
+        const hasValidAnswer = Number.isInteger(selectedIndex)
+            && selectedIndex >= 0
+            && selectedIndex < q.options.length;
+        const isCorrect = hasValidAnswer && selectedIndex === q.correct;
+
+        if (isCorrect) {
             score++;
         }
+
+        studentAnswers.push({
+            question: q.text,
+            selectedAnswer: hasValidAnswer ? q.options[selectedIndex] : null,
+            correctAnswer: q.options[q.correct],
+            isCorrect
+        });
     });
 
     const total = test.questions.length;
@@ -44,6 +59,7 @@ exports.submitTest = (req, res) => {
         score: score,
         total: total,
         percentage: percentage,
+        answers: studentAnswers,
         date: new Date().toLocaleString('fr-FR')
     };
 

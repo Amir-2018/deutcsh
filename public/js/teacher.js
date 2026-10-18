@@ -59,6 +59,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    const resultsList = document.getElementById('results-list');
+    const answersModal = document.getElementById('answers-modal');
+    const answersModalTitle = document.getElementById('answers-modal-title');
+    const answersModalContent = document.getElementById('answers-modal-content');
+    const closeAnswersModal = () => answersModal.classList.add('hidden');
+
+    resultsList.addEventListener('click', (event) => {
+        const button = event.target.closest('.result-answers-btn');
+        if (!button) return;
+
+        const resultItem = button.closest('.result-item');
+        let answers;
+        try {
+            answers = JSON.parse(resultItem.dataset.answers || '[]');
+        } catch (error) {
+            console.error('Impossible de lire les réponses de cet élève :', error);
+            showPopup('Les réponses de cet élève ne peuvent pas être affichées.', { type: 'warning' });
+            return;
+        }
+
+        answersModalTitle.textContent = `Réponses de ${resultItem.dataset.name}`;
+        answersModalContent.replaceChildren();
+
+        if (answers.length === 0) {
+            const notice = document.createElement('p');
+            notice.className = 'answers-unavailable';
+            notice.textContent = 'Les réponses détaillées ne sont pas disponibles pour ce résultat.';
+            answersModalContent.appendChild(notice);
+        } else {
+            answers.forEach((answer, index) => {
+                const row = document.createElement('div');
+                row.className = `answer-review ${answer.isCorrect ? 'answer-review-correct' : 'answer-review-incorrect'}`;
+
+                const question = document.createElement('h4');
+                question.textContent = `Question ${index + 1} : ${answer.question}`;
+                row.appendChild(question);
+
+                const selected = document.createElement('p');
+                selected.textContent = `Réponse de l'élève : ${answer.selectedAnswer ?? 'Aucune réponse'}`;
+                row.appendChild(selected);
+
+                const correct = document.createElement('p');
+                correct.textContent = `Bonne réponse : ${answer.correctAnswer}`;
+                row.appendChild(correct);
+
+                answersModalContent.appendChild(row);
+            });
+        }
+
+        answersModal.classList.remove('hidden');
+        document.getElementById('answers-modal-close').focus();
+    });
+
+    document.getElementById('answers-modal-close').addEventListener('click', closeAnswersModal);
+    answersModal.addEventListener('click', (event) => {
+        if (event.target === answersModal) closeAnswersModal();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !answersModal.classList.contains('hidden')) closeAnswersModal();
+    });
+
     if (TEST_ID) {
         generateQR(TEST_ID);
         openQrModal();
@@ -158,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.className = 'result-item';
             item.setAttribute('data-name', data.name);
             item.setAttribute('data-percentage', data.percentage);
+            item.setAttribute('data-answers', JSON.stringify(data.answers || []));
             item.innerHTML = `
                 <div class="result-left">
                     <div class="avatar" style="background:${data.avatar.color}">${data.avatar.initials}</div>
@@ -170,6 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="result-bar">
                     <div class="result-bar-fill" style="width: ${data.percentage}%"></div>
                 </div>
+                <button type="button" class="btn btn-icon btn-secondary result-answers-btn" title="Voir les réponses de ${escapeHtml(data.name)}" aria-label="Voir les réponses de ${escapeHtml(data.name)}">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </button>
             `;
             list.appendChild(item);
             const sortedItems = [...list.querySelectorAll('.result-item')]

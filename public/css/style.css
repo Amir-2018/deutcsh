@@ -670,6 +670,52 @@ main {
     border-radius: 4px;
 }
 
+.result-answers-btn {
+    flex-shrink: 0;
+}
+
+.answers-modal-box {
+    max-width: 600px;
+    max-height: min(80vh, 700px);
+    overflow-y: auto;
+    text-align: left;
+}
+
+.answers-modal-box h3 {
+    padding-right: 30px;
+}
+
+.answers-modal-content {
+    display: grid;
+    gap: 10px;
+}
+
+.answer-review {
+    padding: 12px;
+    border-left: 4px solid var(--border);
+    border-radius: 5px;
+    background: #FAFBF5;
+}
+
+.answer-review-correct {
+    border-left-color: var(--correct);
+}
+
+.answer-review-incorrect {
+    border-left-color: var(--danger);
+}
+
+.answer-review h4 {
+    margin-bottom: 8px;
+    color: var(--dark);
+}
+
+.answer-review p,
+.answers-unavailable {
+    margin-top: 4px;
+    color: var(--text);
+}
+
 /* ===== Font Awesome : espacement des icônes ===== */
 .btn i,
 .card h3 i,

@@ -119,7 +119,7 @@
                                 <p class="empty-hint">Aucun résultat pour le moment.</p>
                             <% } else { %>
                                 <% results.forEach((r) => { %>
-                                <div class="result-item" data-name="<%= r.name %>" data-percentage="<%= r.percentage %>">
+                                <div class="result-item" data-name="<%= r.name %>" data-percentage="<%= r.percentage %>" data-answers="<%= JSON.stringify(r.answers || []) %>">
                                     <div class="result-left">
                                         <div class="avatar" style="background:<%= r.avatar.color %>"><%= r.avatar.initials %></div>
                                         <div>
@@ -131,6 +131,9 @@
                                     <div class="result-bar">
                                         <div class="result-bar-fill" style="width: <%= r.percentage %>%"></div>
                                     </div>
+                                    <button type="button" class="btn btn-icon btn-secondary result-answers-btn" title="Voir les réponses de <%= r.name %>" aria-label="Voir les réponses de <%= r.name %>">
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </button>
                                 </div>
                                 <% }) %>
                             <% } %>
@@ -158,6 +161,16 @@
                     <button class="btn btn-secondary" onclick="copyLink()"><i class="fa-solid fa-copy"></i> Copier</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="answers-modal" class="modal-overlay hidden">
+        <div class="modal-box answers-modal-box" role="dialog" aria-modal="true" aria-labelledby="answers-modal-title">
+            <button type="button" class="modal-close" id="answers-modal-close" title="Fermer" aria-label="Fermer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 id="answers-modal-title">Réponses de l'élève</h3>
+            <div id="answers-modal-content" class="answers-modal-content"></div>
         </div>
     </div>
 
