@@ -49,7 +49,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearR = document.getElementById('clear-results-form');
     if (clearR) clearR.addEventListener('submit', (e) => { if (!confirm('Voulez-vous vraiment supprimer tous les résultats ?')) e.preventDefault(); });
 
-    if (TEST_ID) generateQR(TEST_ID);
+    if (TEST_ID) {
+        generateQR(TEST_ID);
+        openQrModal();
+    }
+
+    // ---- Popup QR Code : fermeture ----
+    const qrModal = document.getElementById('qr-modal');
+    if (qrModal) {
+        qrModal.addEventListener('click', (e) => {
+            if (e.target === qrModal) closeQrModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeQrModal();
+        });
+    }
 
     // ---- Socket.io : écoute temps réel ----
     if (typeof io !== 'undefined') {
@@ -207,6 +221,15 @@ function removeAnswerInput(btn) {
 }
 
 // ---- QR Code ----
+function openQrModal() {
+    const m = document.getElementById('qr-modal');
+    if (m) m.classList.remove('hidden');
+}
+function closeQrModal() {
+    const m = document.getElementById('qr-modal');
+    if (m) m.classList.add('hidden');
+}
+
 function generateQR(testId) {
     const testUrl = window.location.origin + '/test/' + testId;
     const qrContainer = document.getElementById('qrcode');

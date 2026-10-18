@@ -111,22 +111,6 @@
                 </div>
             </div>
 
-            <!-- QR Code -->
-            <% if (testId) { %>
-            <div id="qr-display" class="card qr-display">
-                <h3><i class="fa-solid fa-qrcode"></i> QR Code</h3>
-                <p>Les élèves scannent ce code pour ouvrir le test.</p>
-                <div id="qrcode"></div>
-                <div class="link-section">
-                    <p class="hint">Ou partagez ce lien :</p>
-                    <div class="link-row">
-                        <input type="text" id="test-link" readonly>
-                        <button class="btn btn-secondary" onclick="copyLink()"><i class="fa-solid fa-copy"></i> Copier</button>
-                    </div>
-                </div>
-            </div>
-            <% } %>
-
             <!-- Résultats des élèves -->
             <div class="card">
                 <h3><i class="fa-solid fa-chart-column"></i> Résultats des élèves</h3>
@@ -157,6 +141,24 @@
             </div>
         </section>
     </main>
+
+    <!-- Popup QR Code -->
+    <div id="qr-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeQrModal()" title="Fermer"><i class="fa-solid fa-xmark"></i></button>
+            <h3><i class="fa-solid fa-qrcode"></i> QR Code</h3>
+            <p>Les élèves scannent ce code pour ouvrir le test.</p>
+            <div id="qrcode" class="modal-qrcode"></div>
+            <div class="link-section">
+                <p class="hint">Ou partagez ce lien :</p>
+                <div class="link-row">
+                    <input type="text" id="test-link" readonly>
+                    <button class="btn btn-secondary" onclick="copyLink()"><i class="fa-solid fa-copy"></i> Copier</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <%- include('partials/footer') %>
     <script>
         window.QUESTIONS = <%- JSON.stringify(questions).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') %>;

@@ -359,23 +359,94 @@ main {
     background: var(--danger-hover);
 }
 
-/* ===== Affichage QR Code ===== */
+/* ===== Affichage QR Code (popup modal) ===== */
 .qr-display {
     text-align: center;
 }
 
-.qr-display #qrcode {
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(17, 28, 26, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-overlay.hidden {
+    display: none;
+}
+
+.modal-box {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    border-top: 4px solid var(--lime);
+    position: relative;
+    animation: modalPop 0.25s ease;
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+.modal-box h3 {
+    color: var(--dark);
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--lime-light);
+    padding-bottom: 8px;
+}
+
+.modal-box p {
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.modal-qrcode {
     display: flex;
     justify-content: center;
     margin: 15px auto;
 }
 
-.qr-display #qrcode img,
-.qr-display #qrcode canvas {
+.modal-qrcode img,
+.modal-qrcode canvas {
     border: 3px solid var(--dark);
     padding: 10px;
     background: white;
-    border-radius: 5px;
+    border-radius: 6px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--dark);
+    color: var(--lime);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--dark-hover);
 }
 
 .link-section {
